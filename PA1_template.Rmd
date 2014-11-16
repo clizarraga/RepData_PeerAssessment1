@@ -8,18 +8,153 @@ output:
 
 ## Loading and preprocessing the data
 
+1. Loading the data
 
+```{r}
+# Loading dependencies
+library(ggplot2)
+# Loading Data (Its assumed that the file activity.zip is in the same directory as this file)
+dataOriginal <- read.csv(unz("activity.zip", "activity.csv"), na.strings = "NA", colClasses = c("integer","Date", "integer"));
+```
+
+2. Processing and transforming the data
+
+```{r}
+# Defining Day of the week
+dataOriginal$weekdayFactor <- weekdays(dataOriginal$date);
+# Setting if its weekday 
+dataOriginal$weekdayFactor[dataOriginal$weekday == "Monday" | dataOriginal$weekday == "Tuesday" | dataOriginal$weekday == "Wednesday" | dataOriginal$weekday == "Thursday" | dataOriginal$weekday == "Friday"] <- "weekday";
+# Setting if its weekend
+dataOriginal$weekdayFactor[dataOriginal$weekday == "Saturday" | dataOriginal$weekday == "Sunday"] <- "weekend";
+# Casting to factor
+dataOriginal$weekdayFactor <- as.factor(dataOriginal$weekdayFactor);
+# Detecting the NA values
+dataClean <- !is.na(dataOriginal$steps)
+# Creating a dataset with clean value (Removing the NA values)
+dataClean <- dataOriginal[dataClean,];
+````
 
 ## What is mean total number of steps taken per day?
 
+For this part of the assignment, we are using the variable **dataClean** wich contains **NO** missing values. 
+  
+1. Make a histogram of the total number of steps taken each day  
 
+```{r}
+# Make a histogram of the total number of steps taken each day
+qplot(date, steps, data = dataClean, stat="summary", fun.y="sum", geom="bar", xlab = "Days", ylab = "Total Steps", main = "Number of steps taken each day")
+```
+.  
+2. Calculate and report the mean and median total number of steps taken per day
+
+```{r}
+# Calculating the mean steps by day
+calculatedMean <- aggregate(dataClean$steps, by = list(dataClean$date), FUN = mean)
+# Calculating the Median steps by day
+calculatedMedian <- aggregate(dataClean$steps, by = list(dataClean$date), FUN = median)
+# Mergin Mean and Median data in one dataset
+report <- merge(calculatedMean, calculatedMedian, by = "Group.1")
+# Renaming columns
+names(report) <- c("Date", "Mean", "Median")
+# Printing the results
+report
+```
 
 ## What is the average daily activity pattern?
 
+1. Make a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
+```{r}
+# Averge Steps By Interval
+averageStepsByInterval <- aggregate(dataClean$steps, by = list(dataClean$interval), FUN = mean)
+# Renaming columns
+names(averageStepsByInterval) <- c("Interval", "Average")
+# Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+qplot(Interval, Average, data = averageStepsByInterval, geom = "line", xlab = "5-minute Interval", ylab = "Average Steps", main = "Average steps by 5-minute interval between Oct 1st and Nov 30th 2012")
+```
 
-## Imputing missing values
+2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
+```{r}
+# Calculating the max Average
+maxAvg <- max(averageStepsByInterval$Average)
+# Getting the interval for that Average
+averageStepsByInterval[averageStepsByInterval$Average == maxAvg,"Interval"]
+```
 
+## Inputing missing values
+
+1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+
+```{r}
+# Number of rows with NA
+numberOfNA <- sum(!complete.cases(dataOriginal))
+# Print result
+numberOfNA
+```
+
+2. Creating a new dataset that is equal to the original dataset but with the missing data filled in, based on the mean for each interval
+
+```{r}
+# Calculating the mean steps by interval
+calculatedMeanByInterval <- aggregate(dataOriginal$steps, by = list(dataOriginal$interval), FUN = mean, na.rm=TRUE)
+# Renaming variables
+names(calculatedMeanByInterval) <- c("interval", "mean")
+# Making a copy of the data
+dataCorrected <- dataOriginal
+# Replacing the missings NA with the mean of each interval calculated in the previous step
+for (i in 1:nrow(calculatedMeanByInterval) ) 
+{
+    # Getting the index to be replaced
+    index <- is.na(dataCorrected$steps) & dataCorrected$interval == calculatedMeanByInterval[i,"interval"]
+    # Replacing rows with value
+    dataCorrected$steps[index] <- calculatedMeanByInterval[i, "mean"]
+}
+```
+
+3. Make a histogram of the total number of steps taken each day (with the corrected data)
+
+```{r}
+# Make a histogram of the total number of steps taken each day
+qplot(date, steps, data = dataCorrected, stat="summary", fun.y="sum", geom="bar", xlab = "Days", ylab = "Total Steps", main = "Number of steps taken each day (Corrected Data)")
+```
+
+4. Calculate and report the mean and median total number of steps taken per day
+
+```{r}
+# Calculating the mean steps by day
+calculatedMeanCorrected <- aggregate(dataCorrected$steps, by = list(dataCorrected$date), FUN = mean)
+# Calculating the median steps by day
+calculatedMedianCorrected <- aggregate(dataCorrected$steps, by = list(dataCorrected$date), FUN = median)
+# Mergin data
+reportCorrected <- merge(calculatedMeanCorrected, calculatedMedianCorrected, by = "Group.1")
+# Renaming columns
+names(reportCorrected) <- c("Date", "Mean", "Median")
+# Printing the report
+reportCorrected
+```
+
+5. Do these values differ from the estimates from the first part of the assignment?
+
+**Yes the values differ for the days with at least one NA in them**
+
+6. What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+**Since we are "filling in" missing values we now have new data (and more steps sums) registered for the days that we didnt before, this was done in order to try and emulate a possible behaviour during that day. Also since the rule we used to replace the data and the fact that the missing values was in most part a complete day, the values for the median and mean are the same, for those cases respectively**
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+For this part the dataset we are using is the one with the **filled-in missing values** in the **previous sections**.  
+
+1. Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
+```{r}
+# Calculating the average steps by interval and all weekday days or weekend days
+avgByIntervalAndWeekFactor <- aggregate(dataCorrected$steps, by=list(dataCorrected$interval,dataCorrected$weekdayFactor), FUN = mean, na.rm = TRUE)
+# Renaming columns
+names(avgByIntervalAndWeekFactor) <- c("interval", "weekdayFactor", "average")
+```
+2. Make a panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
+```{r}
+# Ploting the data
+qplot(interval, average, data = avgByIntervalAndWeekFactor, geom = "line", color = weekdayFactor, facets= weekdayFactor ~ ., xlab = "5-min Interval", ylab = "Average Steps", main = "Average steps taken by interval and weekend or weekday")
+```
