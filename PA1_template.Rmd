@@ -1,10 +1,9 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+Reproducible Research: Peer Assessment 1
+==============================================
 
+Author: **Cesar Lizarraga**  
+Date: **11/16/2014**  
+Version: **1.0**  
 
 ## Loading and preprocessing the data
 
