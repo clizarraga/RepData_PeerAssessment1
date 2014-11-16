@@ -1,5 +1,9 @@
-# Reproducible Research: Peer Assessment 1
+Reproducible Research: Peer Assessment 1
+==============================================
 
+Author: **Cesar Lizarraga**  
+Date: **11/16/2014**  
+Version: **1.0**  
 
 ## Loading and preprocessing the data
 
@@ -43,7 +47,7 @@ For this part of the assignment, we are using the variable **dataClean** wich co
 qplot(date, steps, data = dataClean, stat="summary", fun.y="sum", geom="bar", xlab = "Days", ylab = "Total Steps", main = "Number of steps taken each day")
 ```
 
-![](./PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png) 
 .  
 2. Calculate and report the mean and median total number of steps taken per day
 
@@ -132,7 +136,7 @@ names(averageStepsByInterval) <- c("Interval", "Average")
 qplot(Interval, Average, data = averageStepsByInterval, geom = "line", xlab = "5-minute Interval", ylab = "Average Steps", main = "Average steps by 5-minute interval between Oct 1st and Nov 30th 2012")
 ```
 
-![](./PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png) 
 
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
@@ -192,7 +196,7 @@ for (i in 1:nrow(calculatedMeanByInterval) )
 qplot(date, steps, data = dataCorrected, stat="summary", fun.y="sum", geom="bar", xlab = "Days", ylab = "Total Steps", main = "Number of steps taken each day (Corrected Data)")
 ```
 
-![](./PA1_template_files/figure-html/unnamed-chunk-9-1.png) 
+![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png) 
 
 4. Calculate and report the mean and median total number of steps taken per day
 
@@ -302,4 +306,4 @@ names(avgByIntervalAndWeekFactor) <- c("interval", "weekdayFactor", "average")
 qplot(interval, average, data = avgByIntervalAndWeekFactor, geom = "line", color = weekdayFactor, facets= weekdayFactor ~ ., xlab = "5-min Interval", ylab = "Average Steps", main = "Average steps taken by interval and weekend or weekday")
 ```
 
-![](./PA1_template_files/figure-html/unnamed-chunk-12-1.png) 
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png) 
